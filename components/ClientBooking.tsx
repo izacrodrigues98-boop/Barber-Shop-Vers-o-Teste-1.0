@@ -64,9 +64,13 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
 
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !selectedService || !selectedBarber || !date || !time) return;
+    if (!name || !selectedService || !selectedBarber || !date || !time) {
+      alert("Por favor, preencha todos os campos, incluindo o seu nome.");
+      return;
+    }
     setIsSubmitting(true);
     
+    // Atualiza o perfil com o nome/avatar atual antes de agendar
     storageService.updateClientProfile(clientPhone, { name, avatar: avatar || undefined });
     
     storageService.addAppointment({
@@ -148,7 +152,12 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
              <div className="absolute inset-0 bg-amber-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i className="fa-solid fa-camera text-slate-900"></i></div>
            </div>
            <div className="text-center md:text-left flex-1">
-              <h1 className="text-4xl font-brand text-white uppercase leading-none">Olá, {name || 'Cliente'}</h1>
+              <div className="flex items-center gap-3 justify-center md:justify-start">
+                <h1 className="text-4xl font-brand text-white uppercase leading-none">Olá, {name || 'Cliente'}</h1>
+                <button onClick={() => setIsEditingProfile(true)} className="text-slate-500 hover:text-amber-500 transition-colors">
+                   <i className="fa-solid fa-pen-to-square"></i>
+                </button>
+              </div>
               <p className="text-amber-500 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Você tem {loyalty?.points || 0} pontos no cartão fidelidade</p>
               <div className="flex gap-1.5 mt-4 justify-center md:justify-start">
                  {[...Array(10)].map((_, i) => (
@@ -191,8 +200,23 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
            <section className="space-y-6">
               <h2 className="text-2xl font-brand text-white uppercase tracking-wider flex items-center gap-4">
                 <span className="w-8 h-8 rounded-lg bg-amber-500 text-slate-900 flex items-center justify-center font-bold text-sm">1</span>
-                Escolha o Serviço
+                Dados e Serviço
               </h2>
+              
+              <div className="space-y-4 mb-6">
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-500 uppercase px-2">Seu Nome</label>
+                    <input 
+                       type="text" 
+                       value={name} 
+                       onChange={e => setName(e.target.value)} 
+                       placeholder="Como devemos te chamar?" 
+                       className="w-full bg-slate-950/50 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:border-amber-500" 
+                       required 
+                    />
+                 </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {services.map(s => (
                   <label key={s.id} className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex justify-between items-center ${selectedService === s.id ? 'bg-amber-500/10 border-amber-500 shadow-lg shadow-amber-500/5' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'}`}>
@@ -261,7 +285,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
                    {useLoyaltyPoints && <span className="bg-green-500/10 text-green-500 text-[9px] px-2 py-1 rounded-full border border-green-500/20 font-black uppercase">- € 20 FIDELIDADE</span>}
                  </div>
               </div>
-              <button type="submit" disabled={!time || isSubmitting} className="w-full md:w-auto bg-amber-500 text-slate-900 font-black py-5 px-12 rounded-2xl uppercase tracking-widest text-sm shadow-2xl shadow-amber-500/10 active:scale-95 transition-all disabled:opacity-20">
+              <button type="submit" disabled={!time || !name || isSubmitting} className="w-full md:w-auto bg-amber-500 text-slate-900 font-black py-5 px-12 rounded-2xl uppercase tracking-widest text-sm shadow-2xl shadow-amber-500/10 active:scale-95 transition-all disabled:opacity-20">
                 {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Confirmar Agendamento'}
               </button>
            </div>
@@ -312,7 +336,10 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
                     }
                   }} /></label>
                 </div>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu Nome Completo" className="w-full bg-slate-950 border border-slate-700 p-4 rounded-2xl text-white text-center outline-none focus:border-amber-500" />
+                <div className="w-full space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase px-1">Nome Completo</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu Nome Completo" className="w-full bg-slate-950 border border-slate-700 p-4 rounded-2xl text-white text-center outline-none focus:border-amber-500" />
+                </div>
               </div>
               <div className="flex gap-4">
                  <button onClick={() => setIsEditingProfile(false)} className="flex-1 text-slate-500 text-[10px] font-black uppercase">Cancelar</button>

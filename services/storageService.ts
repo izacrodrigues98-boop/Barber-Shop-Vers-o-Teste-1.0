@@ -13,7 +13,7 @@ const SHOPS_KEY = 'na_regua_shops';
 const DEFAULT_CONFIG: BarberConfig = {
   openTime: '09:00',
   closeTime: '20:00',
-  slotInterval: 30,
+  slotInterval: 60, // Garantido 1 hora
   monthlyGoal: 5000
 };
 
@@ -21,6 +21,7 @@ export const storageService = {
   getBarbers: (): Barber[] => {
     const data = localStorage.getItem(BARBERS_KEY);
     let barbers: Barber[] = data ? JSON.parse(data) : [];
+    
     if (!barbers.find(b => b.username === BARBER_CREDENTIALS.username)) {
       const admin: Barber = {
         id: 'admin-master',
@@ -43,7 +44,7 @@ export const storageService = {
     const data = localStorage.getItem(SHOPS_KEY);
     const shops = data ? JSON.parse(data) : [];
     if (shops.length === 0) {
-      return [{
+      const defaultShop = [{
         id: '1',
         name: 'Na Régua Barber - Matriz',
         address: 'Rua das Tesouras, 123 - Centro',
@@ -55,11 +56,16 @@ export const storageService = {
         longitude: 0,
         active: true
       }];
+      storageService.saveShops(defaultShop);
+      return defaultShop;
     }
     return shops;
   },
 
-  saveShops: (shops: Shop[]) => localStorage.setItem(SHOPS_KEY, JSON.stringify(shops)),
+  saveShops: (shops: Shop[]) => {
+    localStorage.setItem(SHOPS_KEY, JSON.stringify(shops));
+    window.dispatchEvent(new CustomEvent('na_regua_shop_update'));
+  },
 
   getLoyaltyProfile: (phone: string): LoyaltyProfile => {
     const data = localStorage.getItem(LOYALTY_KEY);
@@ -94,9 +100,10 @@ export const storageService = {
     return data ? JSON.parse(data) : INITIAL_SERVICES;
   },
   
-  saveServices: (services: Service[]) => localStorage.setItem(SERVICES_KEY, JSON.stringify(services)),
+  saveServices: (services: Service[]) => {
+    localStorage.setItem(SERVICES_KEY, JSON.stringify(services));
+  },
 
-  // Fixed error: Added deleteService method to support service removal in BarberDashboard
   deleteService: (id: string) => {
     const services = storageService.getServices().filter(s => s.id !== id);
     storageService.saveServices(services);
