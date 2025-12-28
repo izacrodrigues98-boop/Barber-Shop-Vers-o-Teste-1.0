@@ -1,0 +1,7 @@
+{
+  "name": "Na Régua Barber",
+  "description": "Sistema completo para barbearias: agendamento inteligente para clientes e painel administrativo robusto para o barbeiro gerenciar horários, serviços e faturamento.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
