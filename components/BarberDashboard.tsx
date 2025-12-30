@@ -21,7 +21,16 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
   const [activeTab, setActiveTab] = useState<'agenda' | 'faturamento' | 'equipe' | 'cortes' | 'lojas' | 'perfil'>('agenda');
   const [statusFilter, setStatusFilter] = useState<Appointment['status'] | 'all'>('pending');
   const [selectedBarberFilter, setSelectedBarberFilter] = useState<string>('all');
+  const [agendaBarberFilter, setAgendaBarberFilter] = useState<string>('all');
   
+  // Feedback de Notificação Local
+  const [localToast, setLocalToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
+
+  const notify = (msg: string, type: 'success' | 'error' = 'success') => {
+    setLocalToast({ msg, type });
+    setTimeout(() => setLocalToast(null), 3000);
+  };
+
   // Perfil Local do Barbeiro logado
   const [profileName, setProfileName] = useState('');
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
@@ -92,6 +101,7 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
     setIsFinishingAppId(null);
     setProductSaleValue('0');
     loadData();
+    notify(`Status atualizado com sucesso!`);
   };
 
   const handleSaveGoal = () => {
@@ -101,6 +111,7 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
       storageService.updateBarberProfile(myProfile.username, { config: updatedBarberConfig });
       loadData();
       setIsEditingGoal(false);
+      notify("Meta mensal atualizada!");
     }
   };
 
@@ -120,13 +131,14 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
     setIsAddingAppointment(false);
     setNewAppForm({ customerName: '', customerPhone: '', serviceId: '', barberId: '', date: '', time: '' });
     loadData();
+    notify("Agendamento realizado com sucesso!");
   };
 
   const handleSaveProfile = () => {
     if (myProfile) {
       storageService.updateBarberProfile(myProfile.username, { name: profileName, avatar: profileAvatar || undefined });
       loadData();
-      alert('Perfil atualizado com sucesso!');
+      notify("Perfil atualizado!");
     }
   };
 
@@ -135,8 +147,10 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
     const currentBarbers = storageService.getBarbers();
     if (editingBarber.id) {
       storageService.saveBarbers(currentBarbers.map(b => b.id === editingBarber.id ? { ...b, ...editingBarber } : b) as Barber[]);
+      notify("Barbeiro atualizado!");
     } else {
       storageService.saveBarbers([...currentBarbers, { ...(editingBarber as Barber), id: crypto.randomUUID(), assignedServices: services.map(s => s.id), active: true }]);
+      notify("Novo barbeiro adicionado!");
     }
     setIsEditingBarber(false);
     loadData();
@@ -147,8 +161,10 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
     const currentServices = storageService.getServices();
     if (editingService.id) {
       storageService.saveServices(currentServices.map(s => s.id === editingService.id ? { ...s, ...editingService } : s) as Service[]);
+      notify("Serviço atualizado!");
     } else {
       storageService.saveServices([...currentServices, { ...(editingService as Service), id: crypto.randomUUID() }]);
+      notify("Novo serviço criado!");
     }
     setIsEditingService(false);
     loadData();
@@ -159,8 +175,10 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
     const currentShops = storageService.getShops();
     if (editingShop.id) {
       storageService.saveShops(currentShops.map(s => s.id === editingShop.id ? { ...s, ...editingShop } : s) as Shop[]);
+      notify("Unidade atualizada!");
     } else {
       storageService.saveShops([...currentShops, { ...(editingShop as Shop), id: crypto.randomUUID(), active: true, whatsapp: editingShop.phone || '', facebook: '', latitude: 0, longitude: 0 }]);
+      notify("Nova unidade adicionada!");
     }
     setIsEditingShop(false);
     if (onShopUpdate) onShopUpdate();
@@ -218,12 +236,26 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
   const filteredAppointments = useMemo(() => {
     let filtered = appointments;
     if (statusFilter !== 'all') filtered = filtered.filter(a => a.status === statusFilter);
-    if (!isAdmin) filtered = filtered.filter(a => a.barberId === myProfile?.id);
+    if (!isAdmin) {
+      filtered = filtered.filter(a => a.barberId === myProfile?.id);
+    } else if (agendaBarberFilter !== 'all') {
+      filtered = filtered.filter(a => a.barberId === agendaBarberFilter);
+    }
     return filtered;
-  }, [appointments, statusFilter, isAdmin, myProfile]);
+  }, [appointments, statusFilter, isAdmin, myProfile, agendaBarberFilter]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 animate-fade-in pb-32">
+      {/* Notificação Flutuante do Painel */}
+      {localToast && (
+        <div className="fixed top-24 right-4 z-[200] animate-bounce-in">
+          <div className={`px-6 py-3 rounded-2xl shadow-2xl border-2 flex items-center gap-3 ${localToast.type === 'success' ? 'bg-green-600 border-green-400 text-white' : 'bg-red-600 border-red-400 text-white'}`}>
+             <i className={`fa-solid ${localToast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+             <p className="font-bold text-xs uppercase tracking-widest">{localToast.msg}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
         <div className="flex items-center gap-4">
            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">
@@ -251,15 +283,27 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
              <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-brand text-white uppercase">Agenda</h2>
                 <button 
-                   onClick={() => { setNewAppForm({...newAppForm, barberId: myProfile?.id || ''}); setIsAddingAppointment(true); }} 
+                   onClick={() => { 
+                     const defaultBarberId = isAdmin && agendaBarberFilter !== 'all' ? agendaBarberFilter : (myProfile?.id || '');
+                     setNewAppForm({...newAppForm, barberId: defaultBarberId}); 
+                     setIsAddingAppointment(true); 
+                   }} 
                    className="bg-amber-500 text-slate-900 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
                 >
                    <i className="fa-solid fa-calendar-plus mr-2"></i> Novo Agendamento
                 </button>
              </div>
-             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="bg-slate-800 border border-slate-700 text-[10px] font-bold uppercase p-2 rounded-xl text-slate-300 outline-none w-full md:w-auto">
-               <option value="pending">Pendentes</option><option value="confirmed">Confirmados</option><option value="all">Ver Tudo</option>
-             </select>
+             <div className="flex gap-2 w-full md:w-auto">
+                {isAdmin && (
+                  <select value={agendaBarberFilter} onChange={(e) => setAgendaBarberFilter(e.target.value)} className="bg-slate-800 border border-slate-700 text-[10px] font-bold uppercase p-2 rounded-xl text-slate-300 outline-none flex-1 md:flex-none">
+                    <option value="all">Ver Todos Barbeiros</option>
+                    {barbers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                )}
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="bg-slate-800 border border-slate-700 text-[10px] font-bold uppercase p-2 rounded-xl text-slate-300 outline-none flex-1 md:flex-none">
+                  <option value="pending">Pendentes</option><option value="confirmed">Confirmados</option><option value="all">Ver Tudo</option>
+                </select>
+             </div>
           </div>
           <div className="grid grid-cols-1 gap-4">
             {filteredAppointments.length > 0 ? filteredAppointments.map(app => (
@@ -268,7 +312,10 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
                    <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center font-brand text-2xl text-amber-500 border border-slate-700">{app.customerName.charAt(0)}</div>
                    <div>
                       <h4 className="font-bold text-white">{app.customerName}</h4>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">{services.find(s => s.id === app.serviceId)?.name} • {new Date(app.dateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                      <div className="flex flex-col">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest">{services.find(s => s.id === app.serviceId)?.name} • {new Date(app.dateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                        {isAdmin && <p className="text-[8px] text-amber-500/60 font-black uppercase tracking-widest">Barbeiro: {barbers.find(b => b.id === app.barberId)?.name}</p>}
+                      </div>
                    </div>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
@@ -417,7 +464,7 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
                    </div>
                    <div className="flex gap-2 mt-6">
                       <button onClick={() => { setEditingService(service); setIsEditingService(true); }} className="flex-1 bg-slate-700 text-white py-2 rounded-xl text-[9px] font-black uppercase">Editar</button>
-                      <button onClick={() => { if(confirm('Excluir este serviço?')) storageService.deleteService(service.id); loadData(); }} className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"><i className="fa-solid fa-trash-can"></i></button>
+                      <button onClick={() => { if(confirm('Excluir este serviço?')) { storageService.deleteService(service.id); loadData(); notify("Serviço excluído!"); } }} className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"><i className="fa-solid fa-trash-can"></i></button>
                    </div>
                 </div>
               ))}
@@ -491,6 +538,19 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
                  <div className="space-y-1">
                     <label className="text-[9px] font-black text-slate-500 uppercase px-2">Telemóvel (Opcional)</label>
                     <input type="tel" value={newAppForm.customerPhone} onChange={e => setNewAppForm({...newAppForm, customerPhone: e.target.value})} className="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-500 uppercase px-2">Barbeiro Designado</label>
+                    <select 
+                       value={newAppForm.barberId} 
+                       onChange={e => setNewAppForm({...newAppForm, barberId: e.target.value})} 
+                       className="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none" 
+                       required
+                       disabled={!isAdmin}
+                    >
+                       <option value="">Selecione um barbeiro...</option>
+                       {barbers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
                  </div>
                  <div className="space-y-1">
                     <label className="text-[9px] font-black text-slate-500 uppercase px-2">Serviço / Tipo de Corte</label>
@@ -609,6 +669,17 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
            </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes bounce-in {
+          0% { transform: scale(0.9); opacity: 0; }
+          70% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in {
+          animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+      `}</style>
     </div>
   );
 };
