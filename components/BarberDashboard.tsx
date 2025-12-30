@@ -199,11 +199,11 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
       if (appDateStr === todayStr) daily += totalRevenue;
       if (appDate >= firstDayOfMonth) { monthly += totalRevenue; productsMonthly += (app.productsRevenue || 0); }
       
-      // Fill daily chart
+      // Preencher gráfico diário
       const dayIndex = dailyChartData.findIndex(d => d.date === appDateStr);
       if (dayIndex !== -1) dailyChartData[dayIndex].value += totalRevenue;
 
-      // Fill annual chart (if current year)
+      // Preencher gráfico anual
       if (appDate.getFullYear() === currentYear) {
         annualChartData[appDate.getMonth()].value += totalRevenue;
       }
@@ -349,7 +349,6 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
               </div>
               
               <div className="h-64 flex items-end justify-between gap-2 px-2 pt-10 relative">
-                 {/* Grid Lines */}
                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-5">
                     {[...Array(5)].map((_, i) => <div key={i} className="w-full h-px bg-white"></div>)}
                  </div>
@@ -527,7 +526,7 @@ const BarberDashboard: React.FC<BarberDashboardProps> = ({ currentUser, onShopUp
               <div className="space-y-4">
                  <input type="text" placeholder="Nome Completo" value={editingBarber.name} onChange={e => setEditingBarber({...editingBarber, name: e.target.value})} className="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none" required />
                  <input type="text" placeholder="Login" value={editingBarber.username} onChange={e => setEditingBarber({...editingBarber, username: e.target.value})} className="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none" required disabled={!!editingBarber.id} />
-                 <input type="password" placeholder="Senha" value={editingBarber.password} onChange={e => setEditingBarber({...editingBarber, password: e.target.value})} className="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none" required />
+                 <input type="password" placeholder="Senha" value={editingBarber.password} onChange={e => setEditingBarber({...editingBarber, password: e.target.value})} className="w-full bg-slate-950 border border-slate-700 p-3 rounded-xl text-white outline-none" required={!editingBarber.id} />
                  <label className="flex items-center gap-3 px-2">
                     <input type="checkbox" checked={editingBarber.isAdmin} onChange={e => setEditingBarber({...editingBarber, isAdmin: e.target.checked})} className="w-5 h-5 accent-amber-500" />
                     <span className="text-[10px] font-black text-slate-400 uppercase">Administrador</span>

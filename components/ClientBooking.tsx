@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Service, Appointment, BarberConfig, LoyaltyProfile, Barber } from '../types';
 import { storageService } from '../services/storageService';
-import { geminiService } from '../services/geminiService';
 
 const POINTS_TO_REDEEM = 10;
 const DISCOUNT_VALUE = 20.00;
@@ -32,11 +31,6 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
-  // Gemini State
-  const [aiDescription, setAiDescription] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
-
   useEffect(() => {
     const load = () => {
       setServices(storageService.getServices());
@@ -53,14 +47,6 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
     window.addEventListener('na_regua_status_update', load);
     return () => window.removeEventListener('na_regua_status_update', load);
   }, [clientPhone]);
-
-  const handleAiConsult = async () => {
-    if (!aiDescription) return;
-    setIsAiLoading(true);
-    const result = await geminiService.getStyleRecommendation(aiDescription);
-    setAiSuggestion(result.suggestion);
-    setIsAiLoading(false);
-  };
 
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,8 +131,8 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 pb-32">
       {/* Perfil e Fidelidade */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        <div className="lg:col-span-2 bg-slate-800/30 p-8 rounded-[40px] border border-slate-700/50 backdrop-blur-md flex flex-col md:flex-row items-center gap-8">
+      <div className="mb-12">
+        <div className="bg-slate-800/30 p-8 rounded-[40px] border border-slate-700/50 backdrop-blur-md flex flex-col md:flex-row items-center gap-8">
            <div className="w-24 h-24 rounded-3xl bg-slate-900 border border-slate-700 overflow-hidden relative group cursor-pointer" onClick={() => setIsEditingProfile(true)}>
              {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <i className="fa-solid fa-user text-3xl text-slate-700 flex items-center justify-center h-full"></i>}
              <div className="absolute inset-0 bg-amber-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i className="fa-solid fa-camera text-slate-900"></i></div>
@@ -169,27 +155,6 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ clientPhone }) => {
              <button onClick={() => setUseLoyaltyPoints(!useLoyaltyPoints)} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${useLoyaltyPoints ? 'bg-slate-700 text-amber-500 border border-amber-500' : 'bg-amber-500 text-slate-900 shadow-xl'}`}>
                {useLoyaltyPoints ? 'Desconto Ativo' : 'Resgatar €20'}
              </button>
-           )}
-        </div>
-
-        {/* AI Style Assistant */}
-        <div className="bg-gradient-to-br from-indigo-600/20 to-slate-800/30 p-8 rounded-[40px] border border-indigo-500/20 backdrop-blur-md">
-           <h3 className="text-lg font-brand text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-             <i className="fa-solid fa-wand-sparkles text-indigo-400"></i>
-             IA Style Consultant
-           </h3>
-           {!aiSuggestion ? (
-             <div className="space-y-3">
-               <textarea value={aiDescription} onChange={e => setAiDescription(e.target.value)} placeholder="Ex: Tenho rosto redondo e cabelo liso, o que combina?" className="w-full bg-slate-950/50 border border-slate-700 rounded-2xl p-3 text-xs text-slate-300 outline-none focus:border-indigo-500 h-20 resize-none" />
-               <button onClick={handleAiConsult} disabled={isAiLoading || !aiDescription} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase py-3 rounded-xl transition-all disabled:opacity-50">
-                 {isAiLoading ? 'Consultando IA...' : 'Analisar meu Estilo'}
-               </button>
-             </div>
-           ) : (
-             <div className="animate-fade-in">
-               <p className="text-[11px] text-slate-300 italic mb-4 leading-relaxed">"{aiSuggestion}"</p>
-               <button onClick={() => setAiSuggestion(null)} className="text-[9px] text-indigo-400 font-black uppercase tracking-widest">Nova Consulta</button>
-             </div>
            )}
         </div>
       </div>
