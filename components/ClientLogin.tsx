@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
 import Logo from './Logo';
+import { Shop } from '../types';
 
 interface ClientLoginProps {
   onLogin: (phone: string) => void;
   onAdminAccess: () => void;
-  shopName?: string;
+  shopInfo?: Shop | null;
 }
 
-const ClientLogin: React.FC<ClientLoginProps> = ({ onLogin, onAdminAccess, shopName }) => {
+const ClientLogin: React.FC<ClientLoginProps> = ({ onLogin, onAdminAccess, shopInfo }) => {
   const [phone, setPhone] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -20,7 +21,7 @@ const ClientLogin: React.FC<ClientLoginProps> = ({ onLogin, onAdminAccess, shopN
     }
   };
 
-  const displayName = shopName ? shopName.replace('Na Régua Barber - ', '') : 'Régua';
+  const displayName = shopInfo ? shopInfo.name.replace('Na Régua Barber - ', '') : 'Régua';
 
   return (
     <div className="max-w-md mx-auto px-6 py-20 animate-fade-in">
@@ -68,19 +69,31 @@ const ClientLogin: React.FC<ClientLoginProps> = ({ onLogin, onAdminAccess, shopN
         </div>
       </div>
       
-      <div className="mt-12 grid grid-cols-3 gap-4 text-center opacity-40">
-        <div className="space-y-2">
-          <i className="fa-solid fa-scissors text-xl"></i>
-          <p className="text-[8px] uppercase font-black">Cortes</p>
-        </div>
-        <div className="space-y-2 text-amber-500 opacity-100">
-          <i className="fa-solid fa-star text-xl"></i>
-          <p className="text-[8px] uppercase font-black">Fidelidade</p>
-        </div>
-        <div className="space-y-2">
-          <i className="fa-solid fa-clock text-xl"></i>
-          <p className="text-[8px] uppercase font-black">Horários</p>
-        </div>
+      <div className="mt-12 flex justify-center gap-10 text-center">
+        {shopInfo?.whatsapp && (
+           <a href={`https://wa.me/${shopInfo.whatsapp.replace(/\s/g, '')}`} target="_blank" rel="noreferrer" className="group space-y-2 hover-lift">
+              <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:border-green-400 transition-all shadow-lg">
+                <i className="fa-brands fa-whatsapp text-xl text-slate-400 group-hover:text-white transition-colors"></i>
+              </div>
+              <p className="text-[8px] uppercase font-black text-slate-500 group-hover:text-white transition-colors">WhatsApp</p>
+           </a>
+        )}
+        {shopInfo?.instagram && (
+           <a href={`https://instagram.com/${shopInfo.instagram}`} target="_blank" rel="noreferrer" className="group space-y-2 hover-lift">
+              <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center group-hover:bg-pink-600 group-hover:border-pink-400 transition-all shadow-lg">
+                <i className="fa-brands fa-instagram text-xl text-slate-400 group-hover:text-white transition-colors"></i>
+              </div>
+              <p className="text-[8px] uppercase font-black text-slate-500 group-hover:text-white transition-colors">Instagram</p>
+           </a>
+        )}
+        {shopInfo?.facebook && (
+           <a href={`https://facebook.com/${shopInfo.facebook}`} target="_blank" rel="noreferrer" className="group space-y-2 hover-lift">
+              <div className="w-12 h-12 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-400 transition-all shadow-lg">
+                <i className="fa-brands fa-facebook text-xl text-slate-400 group-hover:text-white transition-colors"></i>
+              </div>
+              <p className="text-[8px] uppercase font-black text-slate-500 group-hover:text-white transition-colors">Facebook</p>
+           </a>
+        )}
       </div>
     </div>
   );

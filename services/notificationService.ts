@@ -24,5 +24,9 @@ export const notificationService = {
 
   dispatchStatusUpdateEvent: (detail: any) => {
     window.dispatchEvent(new CustomEvent('na_regua_status_update', { detail }));
+  },
+
+  dispatchLoyaltyRewardEvent: (detail: any) => {
+    window.dispatchEvent(new CustomEvent('na_regua_loyalty_reward', { detail }));
   }
 };

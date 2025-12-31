@@ -1,5 +1,5 @@
 
-import { Appointment, Service, BarberConfig, LoyaltyProfile, Barber, Shop } from '../types';
+import { Appointment, Service, BarberConfig, LoyaltyProfile, Barber, Shop, Message } from '../types';
 import { INITIAL_SERVICES, BARBER_CREDENTIALS } from '../constants';
 import { notificationService } from './notificationService';
 
@@ -13,8 +13,9 @@ const SHOPS_KEY = 'na_regua_shops';
 const DEFAULT_CONFIG: BarberConfig = {
   openTime: '09:00',
   closeTime: '20:00',
-  slotInterval: 60, // Garantido 1 hora
-  monthlyGoal: 5000
+  slotInterval: 60,
+  monthlyGoal: 5000,
+  masterNotice: ''
 };
 
 export const storageService = {
@@ -22,6 +23,7 @@ export const storageService = {
     const data = localStorage.getItem(BARBERS_KEY);
     let barbers: Barber[] = data ? JSON.parse(data) : [];
     
+    // Garantir que o administrador master sempre exista
     if (!barbers.find(b => b.username === BARBER_CREDENTIALS.username)) {
       const admin: Barber = {
         id: 'admin-master',
@@ -73,6 +75,12 @@ export const storageService = {
     return profiles[phone] || { phone, points: 0, totalAppointments: 0 };
   },
 
+  getAllLoyaltyProfiles: (): LoyaltyProfile[] => {
+    const data = localStorage.getItem(LOYALTY_KEY);
+    const profiles: Record<string, LoyaltyProfile> = data ? JSON.parse(data) : {};
+    return Object.values(profiles);
+  },
+
   updateClientProfile: (phone: string, updates: Partial<LoyaltyProfile>) => {
     const data = localStorage.getItem(LOYALTY_KEY);
     const profiles: Record<string, LoyaltyProfile> = data ? JSON.parse(data) : {};
@@ -85,6 +93,12 @@ export const storageService = {
     const profile = storageService.getLoyaltyProfile(phone);
     profile.points = Math.max(0, profile.points + pointsToAdd);
     if (isNewAppointment) profile.totalAppointments += 1;
+    
+    if (profile.points >= 10) {
+      notificationService.dispatchLoyaltyRewardEvent({ ...profile, points: 10 });
+      profile.points = 0;
+    }
+    
     return storageService.updateClientProfile(phone, profile);
   },
 
@@ -93,7 +107,10 @@ export const storageService = {
     return data ? JSON.parse(data) : [];
   },
   
-  saveAppointments: (appointments: Appointment[]) => localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments)),
+  saveAppointments: (appointments: Appointment[]) => {
+    localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments));
+    window.dispatchEvent(new CustomEvent('na_regua_status_update'));
+  },
   
   getServices: (): Service[] => {
     const data = localStorage.getItem(SERVICES_KEY);
@@ -137,6 +154,33 @@ export const storageService = {
       }
       storageService.saveAppointments(appointments);
       notificationService.dispatchStatusUpdateEvent({ ...app, status });
+    }
+  },
+
+  transferAppointment: (id: string, newBarberId: string) => {
+    const appointments = storageService.getAppointments();
+    const index = appointments.findIndex(a => a.id === id);
+    if (index !== -1) {
+      appointments[index].barberId = newBarberId;
+      storageService.saveAppointments(appointments);
+      window.dispatchEvent(new CustomEvent('na_regua_status_update'));
+    }
+  },
+
+  addMessage: (appointmentId: string, sender: 'barber' | 'client', text: string) => {
+    const appointments = storageService.getAppointments();
+    const index = appointments.findIndex(a => a.id === appointmentId);
+    if (index !== -1) {
+      const messages = appointments[index].messages || [];
+      const newMessage: Message = {
+        id: crypto.randomUUID(),
+        sender,
+        text,
+        timestamp: new Date().toISOString()
+      };
+      appointments[index].messages = [...messages, newMessage];
+      storageService.saveAppointments(appointments);
+      window.dispatchEvent(new CustomEvent('na_regua_status_update'));
     }
   },
 

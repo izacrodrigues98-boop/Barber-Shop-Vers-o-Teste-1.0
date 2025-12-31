@@ -17,6 +17,83 @@
     .font-brand {
       font-family: 'Bebas Neue', cursive;
     }
+
+    /* Page Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .animate-view {
+      animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-card {
+      animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Scissor Logo Animation */
+    @keyframes scissor-top {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-30deg); }
+    }
+    @keyframes scissor-bottom {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(30deg); }
+    }
+    @keyframes hair-fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(80px) rotate(180deg); opacity: 0; }
+    }
+
+    .blade-top { transform-origin: center right; }
+    .blade-bottom { transform-origin: center right; }
+    
+    .logo-animating .blade-top { animation: scissor-top 0.2s ease-in-out 4; }
+    .logo-animating .blade-bottom { animation: scissor-bottom 0.2s ease-in-out 4; }
+    
+    .hair-part {
+      position: absolute;
+      width: 1px;
+      height: 6px;
+      background-color: #4b5563;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .logo-animating .hair-part {
+      animation: hair-fall 0.8s linear forwards;
+    }
+
+    /* Utilities */
+    .hover-lift {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-lift:hover {
+      transform: translateY(-4px);
+    }
+    .hover-scale {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-scale:hover {
+      transform: scale(1.02);
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 10px;
+    }
   </style>
 <script type="importmap">
 {

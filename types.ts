@@ -1,4 +1,11 @@
 
+export interface Message {
+  id: string;
+  sender: 'barber' | 'client';
+  text: string;
+  timestamp: string;
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -44,6 +51,8 @@ export interface Appointment {
   usedLoyaltyPoints?: boolean;
   discountApplied?: number;
   productsRevenue?: number;
+  messages?: Message[];
+  observations?: string;
 }
 
 export interface LoyaltyProfile {
@@ -59,6 +68,7 @@ export interface BarberConfig {
   closeTime: string;
   slotInterval: number;
   monthlyGoal: number; 
+  masterNotice?: string;
 }
 
 export type ViewState = 'client_login' | 'client_booking' | 'admin_login' | 'admin_shop_selection' | 'admin_dashboard';
